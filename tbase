@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# ttools: tools for linux based software project development 
+# Copyright (c) 2021 Artur Bak. All Rights Reserved.
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+source env/src.env
+source env/target.env
+
+function DBG {
+    echo "$1:$2"
+}
+
+function WARN {
+    echo "[WARN]$1:$2"
+}
+
+function ERR {
+    echo "[ERR]$1:$2"
+}
+
+function removeExistingDir {
+
+    if [ -z "$1" ]; then
+        DBG "tbase:removeExistingDir" "ERR: empty param may cause system corruption. Exit."
+        exit
+    fi
+
+    if [ -d $1 ]; then
+        DBG "tremoveExistingDir" " $1"
+        rm -Rf $1/
+    fi
+}
+
+# Creates clean directory even if it already exists (old one is deleted) 
+function createCleanDir {
+    
+    removeExistingDir $1
+
+    DBG "createCleanDir" "create $1"
+    mkdir -p $1
+}

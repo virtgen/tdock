@@ -1,0 +1,209 @@
+#!/bin/bash
+
+# ttools: tools for linux based software project development 
+# Copyright (c) 2021 Artur Bak. All Rights Reserved.
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
+source tbase    
+
+VERSION=1.01
+DATE_YEAR=2022
+
+function server_setup {
+
+    if [ "$PLATFORM" = "linux" ]; then
+
+        echo "Installing prequisites for GameHR_New"
+        
+        echo "Update apt."
+        sudo apt update -y
+
+        sudo apt install curl -y
+        sudo apt install git -y
+
+        if [ "$DOCKERIZE" = "yes" ]; then
+            echo "Install docker."
+            sudo apt install docker.io -y
+            echo "Install-compose."
+            sudo apt install docker-compose -y
+            echo "Add user ${USER} to docker group."
+            sudo usermod -aG docker ${USER}
+        fi
+
+
+        echo "Install zip."
+        sudo apt install zip -y
+        echo "Install mc."
+
+    fi
+}
+
+function start_docker {
+    echo "Starting containers.."
+    if [ "$MODE" == "dev" ]; then
+        echo "DEV $@"
+        binex/start-dev $@
+    else
+        echo "PROD $@"
+        binex/start-prod $@
+    fi
+    
+    [ $? != 0 ] && echo "Failed to start Docker services" && exit
+    echo "Containers started."
+}
+
+function stop_docker {
+    echo "Stopping containers.."
+    if [ "$MODE" == "dev" ]; then
+        echo "DEV $@"
+        binex/stop-dev $@
+    else
+        echo "PROD $@"
+        binex/stop-prod $@
+    fi
+    [ $? != 0 ] && echo "Failed to stop Docker services" && exit
+    echo "Containers stopped."
+}
+
+function restart_docker {
+    
+    if [ "$DOCKERIZE" == "yes" ]; then
+        echo "restarting docker containers"
+        stop_docker $@
+        start_docker $@
+    else
+        echo "ERR: you don't use docker mode (DOCKERIZE!=yes)"
+    fi
+} 
+
+function wait {
+    echo "Waiting for $1 sec."
+    sleep $1
+
+}
+
+
+function  start {
+
+    if [ "$DOCKERIZE" = "yes" ]; then
+        start_docker $@
+
+    else
+        DBG "dock::start" "not implemented for non-docker env"
+    fi
+
+}
+
+function stop {
+
+    if [ "$DOCKERIZE" = "yes" ]; then
+        stop_docker $@
+
+    else
+        DBG "dock::stop" "not implemented for non-docker env"        
+    fi
+}
+
+function restart {
+
+    if [ "$DOCKERIZE" = "yes" ]; then
+        restart_docker $@
+    else
+        DBG "dock::restart" "not implemented for non-docker env"
+    fi
+}
+
+function dockerprune {
+    DBG "tdock" "dockerprune"
+    stop
+    wait 10
+    docker system prune -a -f
+    docker volume prune -f
+}
+
+function rebuild {
+    DBG "tdock" "rebuild $1"
+
+    if [ "$MODE" == "dev" ]; then
+        echo "DEV $1"
+        docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --no-deps --build $1
+    else
+        echo "NOT DEV $1"
+        docker-compose up -d --no-deps --build $1
+    fi
+}
+
+function runbash {
+    DBG "tdock" "runbach $1 $2"
+
+    if [ "$2" == "root" ]; then 
+        docker-compose exec -u 0 $1 bash
+    else
+        docker-compose exec $1 bash
+    fi
+
+}
+
+function runsh {
+    DBG "tdock" "runsh $1 $2"
+
+    if [ "$2" == "root" ]; then 
+        docker-compose exec -u 0 $1 sh
+    else
+        docker-compose exec $1 sh
+    fi
+
+}
+
+
+if [ "$1" = "-V" ] || [ "$1" = "--version" ]; then
+    echo "tdock - bash tool for docker management"
+    echo "(c) $DATE_YEAR"
+    echo "version: $VERSION"
+    exit
+fi
+
+if [ "$1" = "--help" ]; then
+    echo "tdock - instruction:"
+    echo "-V or --version: print version of tdock"
+    exit
+fi
+
+COMMAND=$1
+
+if [ -z "$COMMAND" ]; then
+    ERR "tdock" "You must specify the command as a first param."
+    exit
+fi
+
+if [ "$COMMAND" = "start" ]; then
+    start ${@:2}
+elif [ "$COMMAND" = "stop" ]; then
+    stop ${@:2}
+elif [ "$COMMAND" = "restart" ]; then
+    restart ${@:2}
+elif [ "$COMMAND" == "ps" ]; then
+    docker-compose ps
+elif [ "$COMMAND" == "ls" ]; then
+    docker container ls
+elif [ "$COMMAND" == "wait" ]; then
+    echo $2
+elif [ "$COMMAND" == "prune" ]; then
+    dockerprune
+elif [ "$COMMAND" == "rebuild" ]; then
+    rebuild $2
+elif [ "$COMMAND" == "runbash" ]; then
+    # enters to command line of phpfpm service
+    runbash ${@:2}
+elif [ "$COMMAND" == "runsh" ]; then
+    # enters to command line of phpfpm service
+    runsh ${@:2}
+elif [ "$COMMAND" = "server_setup" ]; then
+    server_setup
+else
+    ERR "tdock" "Unknown command: $COMMAND"
+    exit
+fi
+
+echo "tdock: DONE."
