@@ -1,6 +1,6 @@
 #!/bin/bash
 set -o errexit
 
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --remove-orphans "$@"
+bin/docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --remove-orphans "$@"
 
 

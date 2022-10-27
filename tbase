@@ -8,6 +8,14 @@
 source env/src.env
 source env/target.env
 
+if [ "$MODE" == "dev" ]; then
+    echo "DEV mode"
+    DEV_POSTFIX=""
+else
+    echo "PROD mode"
+    DEV_POSTFIX="--no-dev"
+fi
+
 function DBG {
     echo "$1:$2"
 }

@@ -7,7 +7,7 @@
 
 source tbase    
 
-VERSION=1.01
+VERSION=1.02
 DATE_YEAR=2022
 
 function server_setup {
@@ -41,13 +41,8 @@ function server_setup {
 
 function start_docker {
     echo "Starting containers.."
-    if [ "$MODE" == "dev" ]; then
-        echo "DEV $@"
-        binex/start-dev $@
-    else
-        echo "PROD $@"
-        binex/start-prod $@
-    fi
+
+    bin/start $@ $DEV_POSTFIX
     
     [ $? != 0 ] && echo "Failed to start Docker services" && exit
     echo "Containers started."
@@ -55,13 +50,9 @@ function start_docker {
 
 function stop_docker {
     echo "Stopping containers.."
-    if [ "$MODE" == "dev" ]; then
-        echo "DEV $@"
-        binex/stop-dev $@
-    else
-        echo "PROD $@"
-        binex/stop-prod $@
-    fi
+
+    bin/stop $@ $DEV_POSTFIX
+
     [ $? != 0 ] && echo "Failed to stop Docker services" && exit
     echo "Containers stopped."
 }
@@ -125,22 +116,19 @@ function dockerprune {
 function rebuild {
     DBG "tdock" "rebuild $1"
 
-    if [ "$MODE" == "dev" ]; then
-        echo "DEV $1"
-        docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --no-deps --build $1
-    else
-        echo "NOT DEV $1"
-        docker-compose up -d --no-deps --build $1
-    fi
+    bin/docker-compose up -d --no-deps --build $DEV_POSTFIX $1
+
 }
 
 function runbash {
     DBG "tdock" "runbach $1 $2"
 
     if [ "$2" == "root" ]; then 
-        docker-compose exec -u 0 $1 bash
+        #docker-compose exec -u 0 $1 bash
+        bin/docker-compose exec -u 0 $DEV_POSTFIX $1 bash
     else
-        docker-compose exec $1 bash
+        #docker-compose exec $1 bash
+        bin/docker-compose exec $DEV_POSTFIX $1 bash
     fi
 
 }
@@ -149,9 +137,11 @@ function runsh {
     DBG "tdock" "runsh $1 $2"
 
     if [ "$2" == "root" ]; then 
-        docker-compose exec -u 0 $1 sh
+        #docker-compose exec -u 0 $1 sh
+        bin/docker-compose exec -u 0 $DEV_POSTFIX $1 sh
     else
-        docker-compose exec $1 sh
+        #docker-compose exec $1 sh
+        bin/docker-compose exec $DEV_POSTFIX $1 sh
     fi
 
 }
@@ -184,7 +174,7 @@ elif [ "$COMMAND" = "stop" ]; then
 elif [ "$COMMAND" = "restart" ]; then
     restart ${@:2}
 elif [ "$COMMAND" == "ps" ]; then
-    docker-compose ps
+    bin/docker-compose $DEV_POSTFIX ps
 elif [ "$COMMAND" == "ls" ]; then
     docker container ls
 elif [ "$COMMAND" == "wait" ]; then
