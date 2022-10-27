@@ -116,7 +116,7 @@ function dockerprune {
 function rebuild {
     DBG "tdock" "rebuild $1"
 
-    bin/docker-compose up -d --no-deps --build $DEV_POSTFIX $1
+    bin/docker-compose $DEV_POSTFIX up -d --no-deps --build  $1
 
 }
 
@@ -125,10 +125,10 @@ function runbash {
 
     if [ "$2" == "root" ]; then 
         #docker-compose exec -u 0 $1 bash
-        bin/docker-compose exec -u 0 $DEV_POSTFIX $1 bash
+        bin/docker-compose $DEV_POSTFIX exec -u 0  $1 bash
     else
         #docker-compose exec $1 bash
-        bin/docker-compose exec $DEV_POSTFIX $1 bash
+        bin/docker-compose $DEV_POSTFIX exec $1 bash
     fi
 
 }
