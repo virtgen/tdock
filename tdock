@@ -42,7 +42,7 @@ function server_setup {
 function start_docker {
     echo "Starting containers.. $DEV_POSTFIX"
 
-    binex/start $DEV_POSTFIX $@
+    bin/docker-compose $DEV_POSTFIX up -d --remove-orphans "$@"
     
     [ $? != 0 ] && echo "Failed to start Docker services" && exit
     echo "Containers started."
@@ -51,7 +51,7 @@ function start_docker {
 function stop_docker {
     echo "Stopping containers.."
 
-    binex/stop $DEV_POSTFIX $@ 
+    bin/docker-compose $DEV_POSTFIX stop "$@"
 
     [ $? != 0 ] && echo "Failed to stop Docker services" && exit
     echo "Containers stopped."

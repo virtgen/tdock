@@ -1,6 +1,0 @@
-#!/bin/bash
-set -o errexit
-
-bin/docker-compose $1 up -d --remove-orphans "${@:2}"
-
-

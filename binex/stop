@@ -1,2 +1,0 @@
-#!/bin/bash
-bin/docker-compose $1 -f docker-compose.yml -f docker-compose.dev.yml stop "${@:2}"
