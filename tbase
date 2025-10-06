@@ -49,3 +49,28 @@ function createCleanDir {
     DBG "createCleanDir" "create $1"
     mkdir -p $1
 }
+
+function parseParams {
+
+    COMMAND=$1
+    for p in "${@:2}"
+    do
+        #if [ -z "${p##[0-9]*}" ]; then
+
+        if [ "${p:0:5}" == "-url=" ]; then
+            BASE_URL=${p:5}
+            echo "BASE_URL set to '$BASE_URL'"
+        elif [ "${p:0:5}" == "-src=" ]; then
+            SRC_DIR=${p:5}
+            echo "SRC_DIR set to '$SRC_DIR'"
+        elif [ "${p:0:5}" == "-out=" ]; then
+            TARGET_DIR=${p:5}
+            echo "TARGET_DIR set to '$TARGET_DIR'"
+        elif [ "$p" == "-docker" ]; then
+            echo "DOCKERIZE set to 'yes'"
+            DOCKERIZE=yes
+        #else
+        #    echo Unknown param: $p
+        fi
+    done
+}
