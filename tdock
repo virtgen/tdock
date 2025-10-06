@@ -138,10 +138,10 @@ function runsh {
 
     if [ "$2" == "root" ]; then 
         #docker-compose exec -u 0 $1 sh
-        bin/docker-compose exec -u 0 $DEV_POSTFIX $1 sh
+        bin/docker-compose $DEV_POSTFIX exec -u 0 $1 sh
     else
         #docker-compose exec $1 sh
-        bin/docker-compose exec $DEV_POSTFIX $1 sh
+        bin/docker-compose $DEV_POSTFIX exec $1 sh
     fi
 
 }
