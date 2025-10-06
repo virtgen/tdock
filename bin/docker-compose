@@ -1,9 +1,12 @@
 #!/bin/bash
 
-if hash docker-compose 2>/dev/null; then
+if docker compose version >/dev/null 2>&1; then
+  DOCKER_COMPOSE="docker compose"
+elif command -v docker-compose >/dev/null 2>&1; then
   DOCKER_COMPOSE="docker-compose"
 else
-  DOCKER_COMPOSE="docker compose"
+  echo "tdock::docker-compose: Docker Compose is not installed. Break the execution." >&2
+  exit 1
 fi
 
 if [ "$1" == "--no-dev" ]; then
